@@ -1,13 +1,14 @@
 ## Description
-gen_nb_server is an OTP behavior designed to simplify writing completely non-blocking TCP servers. Gone are the
-days of having to use a separate process to perform the listen/accept loop. Instead, gen_nb_server uses features
-built into prim_inet to create a truly non-blocking server. This is the same mechanism networking-intense projects,
-like RabbitMQ, use to create their TCP servers.
+gen_nb_server is an OTP behavior designed to simplify writing completely non-blocking TCP servers.
+Gone are the days of having to use a separate process to perform the listen/accept loop. Instead,
+gen_nb_server uses features built into prim_inet to create a truly non-blocking server. This is the
+same mechanism networking-intense projects, like RabbitMQ, use to create their TCP servers.
 
-In addition, every gen_nb_server is also a gen_server so you can gen_server:call/cast/info to your heart's content!
-What's not to like!?!
+In addition, every gen_nb_server is also a gen_server so you can gen_server:call/cast/info to your
+heart's content! What's not to like!?!
 
 Coming soon:
+
 - Ability to dynamically add/remove listen ports
 - Possibily automate the creation of per-connection worker processes
 
@@ -19,11 +20,12 @@ Coming soon:
 </pre>
 
 2. Implement the required functions. These include the usual suspects from gen_server (see the gen_server man page
-for details) and two new functions: <code>sock_opts/0</code> amd <code>new_connection/2</code>.
+for details) and two new functions: <code>sock_opts/0</code> and <code>new_connection/2</code>.
 
 2a. <code>sock_opts/0</code> is used by gen_nb_server to retrieve the set of socket options to use when
 creating the listen socket. These options will also be inherited by the client connection sockets. See the manpages
-for gen_tcp and inet for more information on socket options.
+for [gen_tcp](http://www.erlang.org/doc/man/gen_tcp.html "gen_tcp manpage") and [inet](http://www.erlang.org/doc/man/inet.html "inet manpage") for more information on
+socket options.
 
 2b. <code>new_connection/2</code> is called every time a new connection is accepted. It is called with the newly
 connected socket and the server's current state.
