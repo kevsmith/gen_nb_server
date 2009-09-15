@@ -20,7 +20,7 @@ Coming soon:
 </pre>
 
 2. Implement the required functions. These include the usual suspects from gen_server (see the
-[gen_tcp](http://www.erlang.org/doc/man/gen_server.html "gen_server manpage") manpage for details) and two new
+[gen_server](http://www.erlang.org/doc/man/gen_server.html "gen_server manpage") manpage for details) and two new
 functions: <code>sock_opts/0</code> and <code>new_connection/2</code>.
 
 2a. <code>sock_opts/0</code> is used by gen_nb_server to retrieve the set of socket options to use when
