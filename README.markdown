@@ -19,8 +19,9 @@ Coming soon:
 -behavior(gen_nb_server).
 </pre>
 
-2. Implement the required functions. These include the usual suspects from gen_server (see the gen_server man page
-for details) and two new functions: <code>sock_opts/0</code> and <code>new_connection/2</code>.
+2. Implement the required functions. These include the usual suspects from gen_server (see the
+[gen_tcp](http://www.erlang.org/doc/man/gen_server.html "gen_server manpage") manpage for details) and two new
+functions: <code>sock_opts/0</code> and <code>new_connection/2</code>.
 
 2a. <code>sock_opts/0</code> is used by gen_nb_server to retrieve the set of socket options to use when
 creating the listen socket. These options will also be inherited by the client connection sockets. See the manpages
