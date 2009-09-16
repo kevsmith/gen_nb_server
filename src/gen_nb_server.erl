@@ -37,7 +37,7 @@
 -define(SERVER, ?MODULE).
 
 -record(state, {cb,
-                socks=[],
+                sock,
                 server_state}).
 
 %% @hidden
@@ -69,7 +69,7 @@ init([CallbackModule, IpAddr, Port, InitParams]) ->
     {ok, ServerState} ->
       case listen_on(CallbackModule, IpAddr, Port) of
         {ok, Sock} ->
-          {ok, #state{cb=CallbackModule, socks=[Sock], server_state=ServerState}};
+          {ok, #state{cb=CallbackModule, sock=Sock, server_state=ServerState}};
         Error ->
           CallbackModule:terminate(Error, ServerState),
           Error
@@ -128,7 +128,8 @@ handle_info(Info, #state{cb=Callback, server_state=ServerState}=State) ->
   end.
 
 %% @hidden
-terminate(Reason, #state{cb=Callback, server_state=ServerState}) ->
+terminate(Reason, #state{cb=Callback, sock=Sock, server_state=ServerState}) ->
+  gen_tcp:close(Sock),
   Callback:terminate(Reason, ServerState),
   ok.
 
