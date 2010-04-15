@@ -25,7 +25,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/4]).
+-export([start_link/4, start_link/5]).
 
 %% Behavior callbacks
 -export([behaviour_info/1]).
@@ -62,6 +62,17 @@ behaviour_info(_) ->
 %% @doc Start server listening on IpAddr:Port
 start_link(CallbackModule, IpAddr, Port, InitParams) ->
   gen_server:start_link(?MODULE, [CallbackModule, IpAddr, Port, InitParams], []).
+
+%% @spec start_link(CallbackModule, IpAddr, Port, InitParams) -> Result
+%%       Name = {local, atom()} | atom()
+%%       CallbackModule = atom()
+%%       IpAddr = string()
+%%       Port = integer()
+%%       InitParams = [any()]
+%%       Result = {ok, pid()} | {error, any()}
+%% @doc Start server listening on IpAddr:Port registered as Name
+start_link(Name, CallbackModule, IpAddr, Port, InitParams) ->
+  gen_server:start_link(Name, ?MODULE, [CallbackModule, IpAddr, Port, InitParams], []).
 
 %% @hidden
 init([CallbackModule, IpAddr, Port, InitParams]) ->
