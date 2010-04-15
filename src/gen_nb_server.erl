@@ -64,7 +64,7 @@ start_link(CallbackModule, IpAddr, Port, InitParams) ->
   gen_server:start_link(?MODULE, [CallbackModule, IpAddr, Port, InitParams], []).
 
 %% @spec start_link(CallbackModule, IpAddr, Port, InitParams) -> Result
-%%       Name = {local, atom()} | atom()
+%%       Name = {local, atom()} | {global, atom()}
 %%       CallbackModule = atom()
 %%       IpAddr = string()
 %%       Port = integer()
