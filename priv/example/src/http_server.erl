@@ -18,14 +18,17 @@
 %% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 %% THE SOFTWARE.
 
--module(example).
+-module(http_server).
 
--export([start_link/2]).
+-export([start/0, start_link/2]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2]).
 -export([terminate/2, sock_opts/0, new_connection/2]).
 
 -behavior(gen_nb_server).
+
+start() ->
+	start_link("0.0.0.0", 9292).
 
 start_link(IpAddr, Port) ->
   gen_nb_server:start_link(?MODULE, IpAddr, Port, []).
@@ -39,12 +42,6 @@ handle_call(_Msg, _From, State) ->
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
-handle_info({tcp, Sock, Data}, State) ->
-  Me = self(),
-  P = spawn(fun() -> worker(Me, Sock, Data) end),
-  gen_tcp:controlling_process(Sock, P),
-  {noreply, State};
-
 handle_info(_Msg, State) ->
   {noreply, State}.
 
@@ -55,17 +52,5 @@ sock_opts() ->
   [binary, {active, once}, {packet, 0}].
 
 new_connection(Sock, State) ->
-  Me = self(),
-  P = spawn(fun() -> worker(Me, Sock) end),
-  gen_tcp:controlling_process(Sock, P),
+	http_worker:start(Sock),
   {ok, State}.
-
-worker(Owner, Sock) ->
-  gen_tcp:send(Sock, "Hello"),
-  inet:setopts(Sock, [{active, once}]),
-  gen_tcp:controlling_process(Sock, Owner).
-
-worker(Owner, Sock, Data) ->
-  gen_tcp:send(Sock, Data),
-  inet:setopts(Sock, [{active, once}]),
-  gen_tcp:controlling_process(Sock, Owner).

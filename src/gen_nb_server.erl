@@ -69,7 +69,7 @@ init([CallbackModule, IpAddr, Port, InitParams]) ->
     {ok, ServerState} ->
       case listen_on(CallbackModule, IpAddr, Port) of
         {ok, Sock} ->
-          {ok, #state{cb=CallbackModule, sock=Sock, server_state=ServerState}};
+          maybe_call_listening(CallbackModule, ServerState, Sock);
         Error ->
           CallbackModule:terminate(Error, ServerState),
           Error
@@ -156,10 +156,25 @@ listen_on(CallbackModule, IpAddr, Port) ->
   end.
 
 %% @hidden
-%% @spec convert_addr(Addr) -> Result
+%% @spec convert(Addr) -> Result
 %%       Addr = string()
 %%       Result = {integer(), integer(), integer(), integer()}
 %% @doc Converts text IP addresses "0.0.0.0" to tuples {0, 0, 0, 0}
 convert(Addr) ->
   T = string:tokens(Addr, "."),
   list_to_tuple([list_to_integer(X) || X <- T]).
+
+%% @hidden - call listening/2 if it exists and return gen_server response
+maybe_call_listening(CallbackModule, ServerState, Sock) ->
+  case erlang:function_exported(CallbackModule, listening, 2) of
+    false ->
+      {ok, #state{cb=CallbackModule, sock=Sock, server_state=ServerState}};
+    true ->
+      case CallbackModule:listening(Sock, ServerState) of
+        {ok, ServerState2} ->
+          {ok, #state{cb=CallbackModule, sock=Sock, server_state=ServerState2}};
+        Error ->
+          CallbackModule:terminate(Error, ServerState),
+          Error
+      end
+  end.
