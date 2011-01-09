@@ -39,9 +39,14 @@ remove_listener(Pid, IpAddr, Port) ->
     gen_server:call(Pid, {remove_listener, IpAddr, Port}).
 
 init([], State) ->
-    {ok, State}.
+    %% Example storing callback module specific state
+    %% This modifies the server state
+    {ok, gen_nb_server:store_cb_state([], State)}.
 
 handle_call({add_listener, IpAddr, Port}, _From, State) ->
+    %% Example of getting callback module state
+    %% Not used here, but just an example
+    [] = gen_nb_server:get_cb_state(State),
     case gen_nb_server:add_listen_socket({IpAddr, Port}, State) of
         {ok, State1} ->
             {reply, ok, State1};

@@ -28,7 +28,7 @@ creating the listen socket. These options will also be inherited by the client c
 for [gen_tcp](http://www.erlang.org/doc/man/gen_tcp.html "gen_tcp manpage") and [inet](http://www.erlang.org/doc/man/inet.html "inet manpage") for more information on
 socket options.
 
-2b. <code>new_connection/2</code> is called every time a new connection is accepted. It is called with the newly
+2b. <code>new_connection/4</code> is called every time a new connection is accepted. It is called with the newly
 connected socket and the server's current state.
 
 Here's a complete example which should give you an idea on how to use gen_nb_server:
@@ -36,38 +36,77 @@ Here's a complete example which should give you an idea on how to use gen_nb_ser
 <pre>
 -module(example).
 
--export([start_link/2]).
+-export([start_link/0,
+         add_listener/3,
+         remove_listener/3]).
 
--export([init/1, handle_call/3, handle_cast/2, handle_info/2]).
--export([terminate/2, sock_opts/0, new_connection/2]).
+-export([init/2, handle_call/3, handle_cast/2, handle_info/2]).
+-export([terminate/2, sock_opts/0, new_connection/4]).
 
 -behavior(gen_nb_server).
 
-start_link(IpAddr, Port) ->
-  gen_nb_server:start_link(?MODULE, IpAddr, Port, []).
+start_link() ->
+    gen_nb_server:start_link(?MODULE, []).
 
-init([]) ->
-  {ok, []}.
+add_listener(Pid, IpAddr, Port) ->
+    gen_server:call(Pid, {add_listener, IpAddr, Port}).
 
+remove_listener(Pid, IpAddr, Port) ->
+    gen_server:call(Pid, {remove_listener, IpAddr, Port}).
+
+init([], State) ->
+    {ok, State}.
+
+handle_call({add_listener, IpAddr, Port}, _From, State) ->
+    case gen_nb_server:add_listen_socket({IpAddr, Port}, State) of
+        {ok, State1} ->
+            {reply, ok, State1};
+        Error ->
+            {reply, Error, State}
+    end;
+handle_call({remove_listener, IpAddr, Port}, _From, State) ->
+    case gen_nb_server:remove_listen_socket({IpAddr, Port}, State) of
+        {ok, State1} ->
+            {reply, ok, State1};
+        Error ->
+            {reply, Error, State}
+    end;
 handle_call(_Msg, _From, State) ->
-  {reply, ignored, State}.
+    {reply, ignored, State}.
 
 handle_cast(_Msg, State) ->
-  {noreply, State}.
+    {noreply, State}.
+
+handle_info({tcp, Sock, Data}, State) ->
+    Me = self(),
+    P = spawn(fun() -> worker(Me, Sock, Data) end),
+    gen_tcp:controlling_process(Sock, P),
+    {noreply, State};
 
 handle_info(_Msg, State) ->
-  {noreply, State}.
+    {noreply, State}.
 
 terminate(_Reason, _State) ->
-  ok.
+    ok.
 
 sock_opts() ->
-  [binary, {active, once}, {packet, 0}].
+    [binary, {active, once}, {packet, 0}].
 
-new_connection(Sock, State) ->
-  gen_tcp:send(Sock, list_to_binary(io_lib:format("No soup for you!~n", []))),
-  gen_tcp:close(Sock),
-  {ok, State}.
+new_connection(_IpAddr, _Port, Sock, State) ->
+    Me = self(),
+    P = spawn(fun() -> worker(Me, Sock) end),
+    gen_tcp:controlling_process(Sock, P),
+    {ok, State}.
+
+worker(Owner, Sock) ->
+    gen_tcp:send(Sock, "Hello\n"),
+    inet:setopts(Sock, [{active, once}]),
+    gen_tcp:controlling_process(Sock, Owner).
+
+worker(Owner, Sock, Data) ->
+    gen_tcp:send(Sock, Data),
+    inet:setopts(Sock, [{active, once}]),
+    gen_tcp:controlling_process(Sock, Owner).
 </pre>
 
 Note: This code is also available in priv/example.
