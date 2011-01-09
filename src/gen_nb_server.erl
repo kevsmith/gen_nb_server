@@ -27,8 +27,8 @@
 %% API
 -export([start_link/2,
          start_link/3,
-         get_state/1,
-         store_state/2,
+         get_cb_state/1,
+         store_cb_state/2,
          add_listen_socket/2,
          remove_listen_socket/2]).
 
@@ -63,7 +63,7 @@ behaviour_info(callbacks) ->
 behaviour_info(_) ->
     undefined.
 
-%% @spec start_link(CallbackModule, IpAddr, Port, InitParams) -> Result
+%% @spec start_link(CallbackModule, InitParams) -> Result
 %%       CallbackModule = atom()
 %%       InitParams = [any()]
 %%       Result = {ok, pid()} | {error, any()}
@@ -71,7 +71,7 @@ behaviour_info(_) ->
 start_link(CallbackModule, InitParams) ->
     gen_server:start_link(?MODULE, [CallbackModule, InitParams], [{fullsweep_after, 0}]).
 
-%% @spec start_link(Name, CallbackModule, IpAddr, Port, InitParams) -> Result
+%% @spec start_link(Name, CallbackModule, InitParams) -> Result
 %%       Name = {local, atom()} | {global, atom()}
 %%       CallbackModule = atom()
 %%       InitParams = [any()]
@@ -80,16 +80,21 @@ start_link(CallbackModule, InitParams) ->
 start_link(Name, CallbackModule, InitParams) ->
     gen_server:start_link(Name, ?MODULE, [CallbackModule, InitParams], [{fullsweep_after, 0}]).
 
-%% @spec get_state(#state{}) -> any()
+%% @spec get_cb_state(#state{}) -> any()
 %% @doc Extracts the callback module's state from the server's overall state
-get_state(#state{server_state=SState}) ->
+%%      NOTE: Should only be called by the submodule
+get_cb_state(#state{server_state=SState}) ->
     SState.
 
-%% @spec store_state(any(), #state{}) -> #state{}
+%% @spec store_cb_state(any(), #state{}) -> #state{}
 %% @doc Stores the callback module's state into the server's state
-store_state(CBState, State) when is_record(State, state) ->
+%%      NOTE: Should only be called by the submodule
+store_cb_state(CBState, State) when is_record(State, state) ->
     State#state{server_state=CBState}.
 
+%% @spec add_listen_socket({string(), integer()}, #state{}) -> {ok, #state{}} | {error, any()}
+%% @doc Adds a new listener socket to be managed by gen_nb_server
+%%      NOTE: Should only be called by the submodule
 add_listen_socket({IpAddr, Port}, #state{cb=Callback, addrs=Addrs, socks=Socks}=State) ->
     Key = {IpAddr, Port},
     case dict:find(Key, Socks) of
@@ -104,7 +109,9 @@ add_listen_socket({IpAddr, Port}, #state{cb=Callback, addrs=Addrs, socks=Socks}=
                     Error
             end
     end.
-
+%% @spec remove_listen_socket({string(), integer()}, #state{}) -> {ok, #state{}} | {error, any()}
+%% @doc Removes a new listener socket to be managed by gen_nb_server
+%%      NOTE: Should only be called by the submodule
 remove_listen_socket({IpAddr, Port}, #state{socks=Socks, addrs=Addrs}=State) ->
     Key = {IpAddr, Port},
     case dict:find(Key, Socks) of
