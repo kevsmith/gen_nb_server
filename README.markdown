@@ -5,12 +5,7 @@ gen_nb_server uses features built into prim_inet to create a truly non-blocking 
 same mechanism networking-intense projects, like RabbitMQ, use to create their TCP servers.
 
 In addition, every gen_nb_server is also a gen_server so you can gen_server:call/cast/info to your
-heart's content! What's not to like!?!
-
-Coming soon:
-
-- Ability to dynamically add/remove listen ports
-- Possibily automate the creation of per-connection worker processes
+heart's content! What's not to like?
 
 ## How to use gen_nb_server
 
@@ -21,7 +16,7 @@ Coming soon:
 
 2. Implement the required functions. These include the usual suspects from gen_server (see the
 [gen_server](http://www.erlang.org/doc/man/gen_server.html "gen_server manpage") manpage for details) and two new
-functions: <code>sock_opts/0</code> and <code>new_connection/2</code>.
+functions: <code>sock_opts/0</code> and <code>new_connection/4</code>.
 
 2a. <code>sock_opts/0</code> is used by gen_nb_server to retrieve the set of socket options to use when
 creating the listen socket. These options will also be inherited by the client connection sockets. See the manpages
