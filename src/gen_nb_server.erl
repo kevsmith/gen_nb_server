@@ -130,8 +130,10 @@ init([CallbackModule, InitParams]) ->
     process_flag(trap_exit, true),
     State = #state{cb=CallbackModule},
     case CallbackModule:init(InitParams, State) of
-        {ok, ServerState} ->
+        {ok, ServerState} when is_record(ServerState, state) ->
             {ok, ServerState};
+        {ok, _State} ->
+            {error, bad_init_state};
         Err ->
             Err
     end.
